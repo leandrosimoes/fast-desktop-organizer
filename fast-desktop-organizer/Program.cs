@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace fast_desktop_organizer {
     class Program {
+        private static List<string> _errors = new List<string>();
+
         static void Main(string[] args) {
             var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
             var messPath = desktopPath + "\\" + "Mess-" + DateTime.Now.ToString("yyyy-MM-dd");
-            string[] extensionsExceptions = { "EXE", "ICO", "LNK", "INI" };
+            string[] extensionsExceptions = { "ICO", "LNK", "INI" };
 
             Console.WriteLine("Start to organize this mess...");
 
@@ -28,11 +31,33 @@ namespace fast_desktop_organizer {
             Console.WriteLine(".......");
             Console.WriteLine(finishMessage);
             Console.WriteLine(".......");
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+
+            if (_errors.Any()) {
+                Console.WriteLine("IMPORTANT! Some files or folders was not copied, do you want to see the erros messages? (Y or N)");
+                Console.WriteLine(".......");
+
+                var resultKey = ConsoleKey.Z;
+
+                while (resultKey != ConsoleKey.Y && resultKey != ConsoleKey.N) {
+                    resultKey = Console.ReadKey().Key;
+
+                    if (resultKey == ConsoleKey.Y) {
+                        foreach (var error in _errors) {
+                            Console.WriteLine(error);
+                        }
+
+                        Console.WriteLine(".......");
+                        Console.WriteLine("Press any key to exit...");
+                        Console.ReadKey();
+                    }
+                }
+            } else {
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }
         }
 
-        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs, string[] exceptions, ref int count) {
+        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs, string[] exceptions, ref int count, bool isSubdir = false) {
             try {
                 var dir = new DirectoryInfo(sourceDirName);
 
@@ -50,14 +75,14 @@ namespace fast_desktop_organizer {
                 var files = dir.GetFiles();
                 foreach (FileInfo file in files) {
                     try {
-                        if (exceptions.Any(e => e == file.Extension.Replace(".", "").ToUpper())) continue;
+                        if (!isSubdir && exceptions.Any(e => e == file.Extension.Replace(".", "").ToUpper())) continue;
 
                         var temppath = Path.Combine(destDirName, file.Name);
                         file.CopyTo(temppath, true);
 
                         Console.WriteLine(string.Format("\"{0}\" : OK", file.FullName));
                     } catch (Exception ex) {
-                        Console.WriteLine(string.Format("\"{0}\" : ERROR ({1})", file.FullName, ex.Message));
+                        _errors.Add(string.Format("\"{0}\" : ERROR ({1})", file.FullName, ex.Message));
                     }
                 }
 
@@ -67,17 +92,17 @@ namespace fast_desktop_organizer {
                             if (subdir.FullName == destDirName) continue;
 
                             var temppath = Path.Combine(destDirName, subdir.Name);
-                            DirectoryCopy(subdir.FullName, temppath, copySubDirs, exceptions, ref count);
+                            DirectoryCopy(subdir.FullName, temppath, copySubDirs, exceptions, ref count, true);
                             Console.WriteLine(string.Format("\"{0}\" : OK", subdir.FullName));
                         } catch (Exception ex) {
-                            Console.WriteLine(string.Format("\"{0}\" : ERROR ({1})", subdir.FullName, ex.Message));
+                            _errors.Add(string.Format("\"{0}\" : ERROR ({1})", subdir.FullName, ex.Message));
                         }
                     }
                 }
 
                 count++;
             } catch (Exception ex) {
-                Console.WriteLine(string.Format("\"{0}\" : ERROR ({1})", destDirName, ex.Message));
+                _errors.Add(string.Format("\"{0}\" : ERROR ({1})", destDirName, ex.Message));
             }
         }
     }
