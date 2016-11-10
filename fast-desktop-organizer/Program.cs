@@ -64,6 +64,8 @@ namespace fast_desktop_organizer {
                 if (copySubDirs) {
                     foreach (DirectoryInfo subdir in dirs) {
                         try {
+                            if (subdir.FullName == destDirName) continue;
+
                             var temppath = Path.Combine(destDirName, subdir.Name);
                             DirectoryCopy(subdir.FullName, temppath, copySubDirs, exceptions, ref count);
                             Console.WriteLine(string.Format("\"{0}\" : OK", subdir.FullName));
