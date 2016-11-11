@@ -75,10 +75,20 @@ namespace fast_desktop_organizer {
                 var files = dir.GetFiles();
                 foreach (FileInfo file in files) {
                     try {
-                        if (!isSubdir && exceptions.Any(e => e == file.Extension.Replace(".", "").ToUpper())) continue;
+                        var fileExtension = file.Extension.Replace(".", "").ToUpper();
 
-                        var temppath = Path.Combine(destDirName, file.Name);
-                        file.CopyTo(temppath, true);
+                        if (!isSubdir && exceptions.Any(e => e == fileExtension)) continue;
+
+                        var tempPath = isSubdir 
+                            ? destDirName
+                            : Path.Combine(destDirName, fileExtension);
+
+                        if (!Directory.Exists(tempPath)) {
+                            Directory.CreateDirectory(tempPath);
+                        }
+
+                        var tempFilePath = Path.Combine(tempPath, file.Name);
+                        file.CopyTo(tempFilePath, true);
 
                         Console.WriteLine(string.Format("\"{0}\" : OK", file.FullName));
                     } catch (Exception ex) {
