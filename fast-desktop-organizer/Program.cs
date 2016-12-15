@@ -11,7 +11,7 @@ namespace fast_desktop_organizer {
             var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
             var messPath = desktopPath + "\\" + "Mess-" + DateTime.Now.ToString("yyyy-MM-dd");
-            string[] extensionsExceptions = { "ICO", "LNK", "INI" };
+            string[] extensionsExceptions = { "ICO", "LNK", "INI", "URL" };
 
             Console.WriteLine("Start to organize this mess...");
 
@@ -21,7 +21,7 @@ namespace fast_desktop_organizer {
                 Directory.CreateDirectory(messPath);
             }
 
-            var count = 0;
+            var count = -1;
             DirectoryCopy(desktopPath, messPath, true, extensionsExceptions, ref count);
 
             var finishMessage = count > 0 ?
